@@ -20,6 +20,9 @@ builder.Services.AddMarten(opts =>
     opts.Events.AddEventType<AccountCreatedEvent>();
     opts.Events.AddEventType<AccountUpdatedEvent>();
     opts.Events.AddEventType<TransactionCreatedEvent>();
+    
+    // Configure inline projections so they're built when events are written
+    opts.Projections.Add<AccountProjection>(ProjectionLifecycle.Inline);
 })
 .UseLightweightSessions()
 .AddAsyncDaemon(Marten.Events.Daemon.Resiliency.DaemonMode.Solo);
@@ -100,5 +103,53 @@ public class Account
     public string CustomerName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public decimal Balance { get; set; }
+}
+
+// Projection for account summary (shared with AuditTrail service)
+public class AccountProjection : MultiStreamProjection<AccountSummary, Guid>
+{
+    public AccountProjection()
+    {
+        Identity<AccountCreatedEvent>(e => e.AccountId);
+        Identity<AccountUpdatedEvent>(e => e.AccountId);
+        Identity<TransactionCreatedEvent>(e => e.AccountId);
+    }
+
+    public void Apply(AccountSummary summary, AccountCreatedEvent @event)
+    {
+        summary.Id = @event.AccountId;
+        summary.AccountNumber = @event.AccountNumber;
+        summary.CustomerName = @event.CustomerName;
+        summary.Email = @event.Email;
+        summary.CreatedAt = @event.CreatedAt;
+        summary.LastUpdatedAt = @event.CreatedAt;
+    }
+
+    public void Apply(AccountSummary summary, AccountUpdatedEvent @event)
+    {
+        summary.CustomerName = @event.CustomerName;
+        summary.Email = @event.Email;
+        summary.LastUpdatedAt = @event.UpdatedAt;
+    }
+
+    public void Apply(AccountSummary summary, TransactionCreatedEvent @event)
+    {
+        summary.TransactionCount++;
+        summary.TotalTransactionAmount += @event.Amount;
+        summary.LastUpdatedAt = @event.CreatedAt;
+    }
+}
+
+// Projection document
+public class AccountSummary
+{
+    public Guid Id { get; set; }
+    public string AccountNumber { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public int TransactionCount { get; set; }
+    public decimal TotalTransactionAmount { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime LastUpdatedAt { get; set; }
 }
 

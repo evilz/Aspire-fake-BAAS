@@ -21,11 +21,10 @@ builder.Services.AddMarten(opts =>
     opts.Events.AddEventType<AccountUpdatedEvent>();
     opts.Events.AddEventType<TransactionCreatedEvent>();
     
-    // Configure projections
+    // Configure projections - using Inline (projections are built by API service)
     opts.Projections.Add<AccountProjection>(ProjectionLifecycle.Inline);
 })
-.UseLightweightSessions()
-.AddAsyncDaemon(Marten.Events.Daemon.Resiliency.DaemonMode.Solo);
+.UseLightweightSessions();
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(connectionString, name: "postgresql");
