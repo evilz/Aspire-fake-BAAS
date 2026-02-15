@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AspireFakeBAAS.Api/AspireFakeBAAS.Api.csproj" />
+    <Project Path="src/AspireFakeBAAS.AppHost/AspireFakeBAAS.AppHost.csproj" />
+    <Project Path="src/AspireFakeBAAS.AuditTrail/AspireFakeBAAS.AuditTrail.csproj" />
+    <Project Path="src/AspireFakeBAAS.Contracts/AspireFakeBAAS.Contracts.csproj" />
+    <Project Path="src/AspireFakeBAAS.ServiceDefaults/AspireFakeBAAS.ServiceDefaults.csproj" />
+  </Folder>
+</Solution>
